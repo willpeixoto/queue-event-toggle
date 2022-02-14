@@ -1,0 +1,21 @@
+{
+  "ResponseMetadata": { "RequestId": "eef92d6a-ace7-5109-be6b-77e945e3c898" },
+  "Attributes": {
+    "QueueArn": "arn:aws:sqs:us-east-2:774779793691:queue-prioritizationint-no-priority-queue.fifo",
+    "ApproximateNumberOfMessages": "0",
+    "ApproximateNumberOfMessagesNotVisible": "0",
+    "ApproximateNumberOfMessagesDelayed": "0",
+    "CreatedTimestamp": "1644810838",
+    "LastModifiedTimestamp": "1644810838",
+    "VisibilityTimeout": "40",
+    "MaximumMessageSize": "262144",
+    "MessageRetentionPeriod": "345600",
+    "DelaySeconds": "0",
+    "ReceiveMessageWaitTimeSeconds": "0",
+    "SqsManagedSseEnabled": "false",
+    "FifoQueue": "true",
+    "DeduplicationScope": "queue",
+    "FifoThroughputLimit": "perQueue",
+    "ContentBasedDeduplication": "true"
+  }
+}

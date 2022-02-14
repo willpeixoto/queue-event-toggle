@@ -1,0 +1,23 @@
+{
+  "name": "queue-prioritization",
+  "version": "1.0.0",
+  "description": "POC to check queue attributes and change how the consumer works",
+  "main": "handler.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "serverless",
+    "queue",
+    "prioritization",
+    "event-source-mapping"
+  ],
+  "author": "Willian Peixoto",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "aws-sdk": "^2.1066.0"
+  },
+  "dependencies": {
+    "uuidv4": "^6.2.12"
+  }
+}

@@ -1,0 +1,118 @@
+
+service: queue-preioritizations
+frameworkVersion: '2'
+variablesResolutionMode: 20210326
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+  region: ${opt:region, "us-east-2"}
+  stage: ${opt:stage, "int"}
+  environment:
+    HIGH_PRIORITY_QUEUE: ${self:custom.sqs.HighPriorityQueue.https}
+    MIDDLE_PRIORITY_QUEUE: ${self:custom.sqs.MiddlePriorityQueue.https}
+    NO_PRIORITY_QUEUE: ${self:custom.sqs.NoPriorityQueue.https}
+    REGION: ${self:provider.region}
+
+# you can add statements to the Lambda function's IAM Role here
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "sqs:GetQueueAttributes"
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - lambda:ListEventSourceMappings
+            - lambda:GetEventSourceMapping
+            - lambda:UpdateEventSourceMapping
+          Resource: "*" #!Sub
+            #- arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:event-source-mappings:*
+        - Effect: Allow
+          Action:
+            - events:*
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - sqs:*
+          Resource: "*"
+custom:
+  sqs:
+    HighPriorityQueue:
+      name: ${self:service}${self:provider.stage}-high-priority-queue.fifo
+      arn: arn:aws:sqs:${aws:region}:${aws:accountId}:${self:custom.sqs.HighPriorityQueue.name}
+      https: https://sqs.${aws:region}.amazonaws.com/${aws:accountId}/${self:custom.sqs.HighPriorityQueue.name}
+    MiddlePriorityQueue:
+      name: ${self:service}${self:provider.stage}-middle-priority-queue.fifo
+      arn: arn:aws:sqs:${aws:region}:${aws:accountId}:${self:custom.sqs.MiddlePriorityQueue.name}
+      https: https://sqs.${aws:region}.amazonaws.com/${aws:accountId}/${self:custom.sqs.MiddlePriorityQueue.name}
+    NoPriorityQueue:
+      name: ${self:service}${self:provider.stage}-no-priority-queue.fifo
+      arn: arn:aws:sqs:${aws:region}:${aws:accountId}:${self:custom.sqs.NoPriorityQueue.name}
+      https: https://sqs.${aws:region}.amazonaws.com/${aws:accountId}/${self:custom.sqs.NoPriorityQueue.name}
+
+
+functions:
+  checkSizeOfQueue:
+    handler: handler.hello
+    events:
+      - httpApi: #//schedule
+          path: /prioritization/start
+          method: get
+
+  eventTriggerChanger:
+    handler: handler.eventToggle
+    events:
+      - httpApi:
+          path: /prioritization/change
+          method: POST
+
+  consumer:
+    handler: handler.readingQueue
+    events:
+      - sqs:
+          arn: ${self:custom.sqs.HighPriorityQueue.arn}
+          batchSize: 1
+      - sqs:
+          arn: ${self:custom.sqs.NoPriorityQueue.arn}
+          batchSize: 1
+
+
+  addMessage:
+    handler: handler.feedQueue
+    events:
+      - httpApi:
+          path: /prioritization/feedQueue
+          method: POST
+
+
+# you can add CloudFormation resource templates here
+resources:
+ Resources:
+   HighPriorityQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.sqs.HighPriorityQueue.name}
+        FifoQueue: true
+        VisibilityTimeout: 40
+        ContentBasedDeduplication: true
+   MiddlePriorityQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.sqs.MiddlePriorityQueue.name}
+        FifoQueue: true
+        VisibilityTimeout: 40
+        ContentBasedDeduplication: true
+   NoPriorityQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.sqs.NoPriorityQueue.name}
+        FifoQueue: true
+        VisibilityTimeout: 40
+        ContentBasedDeduplication: true
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
